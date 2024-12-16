@@ -11,6 +11,7 @@ import (
 var DB *sql.DB
 
 func ConnectDB() {
+	// Ganti dengan konfigurasi database kamu
 	dsn := "root@tcp(127.0.0.1:3306)/sistem_tracking"
 	var err error
 
@@ -19,11 +20,10 @@ func ConnectDB() {
 		log.Fatalf("Gagal terkoneksi ke database: %v", err)
 	}
 
-	
-	err = DB.Ping()
-	if err != nil {
+	// Ping database untuk memastikan koneksi berhasil
+	if err = DB.Ping(); err != nil {
 		log.Fatalf("Tidak bisa melakukan ping ke database: %v", err)
 	}
 
-	fmt.Println("Koneksi ke database berhasil.")
+	fmt.Println("Berhasil terhubung ke database!")
 }

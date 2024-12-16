@@ -3,20 +3,25 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"sistem-tracking/config"
 	"sistem-tracking/routes"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// Mode Release untuk production
+	gin.SetMode(gin.ReleaseMode)
+
 	// Hubungkan ke database
 	config.ConnectDB()
 
-	// Definisikan route
 	router := routes.SetupRoutes()
-
-	// Jalankan server
+	router.SetTrustedProxies(nil)
 	port := ":8080"
-	fmt.Printf("cihuyyy, servernya jalan coo, jalan di http://localhost%s\n", port)
-	log.Fatal(http.ListenAndServe(port, router))
+	fmt.Printf("Server berjalan di http://localhost%s\n", port)
+
+	if err := router.Run(port); err != nil {
+		log.Fatalf("Gagal menjalankan server: %v", err)
+	}
 }
