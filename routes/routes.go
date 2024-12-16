@@ -12,16 +12,20 @@ func SetupRoutes() *gin.Engine {
 	// Routes untuk parcel
 	parcelRoutes := router.Group("/parcels")
 	{
-		// CRUD untuk parcel
-		parcelRoutes.GET("/", controllers.GetParcels)         // Ambil semua data parcel
-		parcelRoutes.GET("/:id", controllers.GetParcelByID)   // Ambil data parcel berdasarkan ID
-		parcelRoutes.POST("/", controllers.CreateParcel)      // Tambahkan data parcel baru
-		parcelRoutes.PUT("/:id", controllers.UpdateParcel)    // Update data parcel
-		parcelRoutes.DELETE("/:id", controllers.DeleteParcel) // Hapus data parcel
+		parcelRoutes.GET("/", controllers.GetParcels)
+		parcelRoutes.GET("/:id", controllers.GetParcelByID)
+		parcelRoutes.POST("/", controllers.CreateParcel)
+		parcelRoutes.PUT("/:id", controllers.UpdateParcel)
+		parcelRoutes.DELETE("/:id", controllers.DeleteParcel)
+		parcelRoutes.POST("/:id/tracking", controllers.AddTrackingStatus)
+		parcelRoutes.GET("/:id/tracking", controllers.GetTrackingStatus)
+	}
 
-		// Routes tambahan untuk tracking status
-		parcelRoutes.POST("/:id/tracking", controllers.AddTrackingStatus) // Tambahkan tracking status baru
-		parcelRoutes.GET("/:id/tracking", controllers.GetTrackingStatus)  // Ambil riwayat tracking status
+	// Routes untuk user
+	userRoutes := router.Group("/users")
+	{
+		userRoutes.POST("/register", controllers.RegisterUser)
+		userRoutes.POST("/login", controllers.LoginUser)
 	}
 
 	return router
