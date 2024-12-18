@@ -1,29 +1,23 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var DB *sql.DB
+var DB *gorm.DB
 
 func ConnectDB() {
-	// Ganti dengan konfigurasi database kamu
-	dsn := "root@tcp(127.0.0.1:3306)/sistem_tracking"
+	dsn := "root@tcp(127.0.0.1:3306)/sistem_tracking?charset=utf8mb4&parseTime=True&loc=Local"
 	var err error
 
-	DB, err = sql.Open("mysql", dsn)
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Gagal terkoneksi ke database: %v", err)
+		log.Fatalf("Gagal menghubungkan ke database: %v", err)
 	}
 
-	// Ping database untuk memastikan koneksi berhasil
-	if err = DB.Ping(); err != nil {
-		log.Fatalf("Tidak bisa melakukan ping ke database: %v", err)
-	}
-
-	fmt.Println("Berhasil terhubung ke database!")
+	fmt.Println("Berhasil terhubung ke database menggunakan GORM!")
 }

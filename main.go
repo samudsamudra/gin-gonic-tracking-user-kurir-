@@ -16,11 +16,18 @@ func main() {
 	// Hubungkan ke database
 	config.ConnectDB()
 
+	// Log untuk memastikan migrasi berjalan
+	fmt.Println("Migrasi database sedang dijalankan...")
+
+	// Setup router
 	router := routes.SetupRoutes()
 	router.SetTrustedProxies(nil)
+
+	// Port server
 	port := ":8080"
 	fmt.Printf("Server berjalan di http://localhost%s\n", port)
 
+	// Jalankan server
 	if err := router.Run(port); err != nil {
 		log.Fatalf("Gagal menjalankan server: %v", err)
 	}

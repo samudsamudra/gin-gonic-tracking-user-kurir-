@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"sistem-tracking/config"
 	"sistem-tracking/models"
 
 	"github.com/gin-gonic/gin"
@@ -28,22 +29,14 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// Hash password sebelum disimpan
-	hashedPassword, err := models.HashPassword(input.Password)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghash password"})
-		return
-	}
-
-	// Buat user baru
+	// Buat user baru dengan hash password
 	user := models.User{
 		Email:    input.Email,
-		Password: hashedPassword, // Simpan dalam bentuk hash
+		Password: input.Password,
 		Role:     input.Role,
 	}
 
-	// Simpan user ke database
-	if err := models.CreateUser(user); err != nil {
+	if err := models.CreateUser(config.DB, &user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan user ke database"})
 		return
 	}
@@ -71,7 +64,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	// Ambil user berdasarkan email
-	user, err := models.GetUserByEmail(input.Email)
+	user, err := models.GetUserByEmail(config.DB, input.Email)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email atau password salah"})
 		return
@@ -97,7 +90,7 @@ func LoginUser(c *gin.Context) {
 	})
 }
 
-// Fungsi untuk generate token JWT
+// generateJWT - Fungsi untuk membuat token JWT
 func generateJWT(email, role string) (string, error) {
 	// Buat claims untuk token
 	claims := jwt.MapClaims{
@@ -106,7 +99,7 @@ func generateJWT(email, role string) (string, error) {
 		"exp":   time.Now().Add(time.Hour * 2).Unix(),
 	}
 
-	// Buat token
+	// Buat token menggunakan HMAC SHA256
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecret)
 }

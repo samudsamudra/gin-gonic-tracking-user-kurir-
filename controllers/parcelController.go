@@ -2,15 +2,16 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
+	"sistem-tracking/config"
 	"sistem-tracking/models"
-	"strconv" 
 
 	"github.com/gin-gonic/gin"
 )
 
 // GetParcels - Mengambil semua data pengiriman
 func GetParcels(c *gin.Context) {
-	parcels, err := models.GetAllParcels()
+	parcels, err := models.GetAllParcels(config.DB)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data pengiriman"})
 		return
@@ -26,7 +27,7 @@ func GetParcelByID(c *gin.Context) {
 		return
 	}
 
-	parcel, err := models.GetParcelByID(id)
+	parcel, err := models.GetParcelByID(config.DB, uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Data pengiriman tidak ditemukan"})
 		return
@@ -43,13 +44,12 @@ func CreateParcel(c *gin.Context) {
 		return
 	}
 
-	err := models.CreateParcel(parcel)
-	if err != nil {
+	if err := models.CreateParcel(config.DB, &parcel); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan data pengiriman"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Data pengiriman berhasil ditambahkan"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Data pengiriman berhasil ditambahkan", "data": parcel})
 }
 
 // UpdateParcel - Mengupdate data pengiriman
@@ -60,14 +60,13 @@ func UpdateParcel(c *gin.Context) {
 		return
 	}
 
-	var parcel models.Parcel
-	if err := c.ShouldBindJSON(&parcel); err != nil {
+	var updatedParcel models.Parcel
+	if err := c.ShouldBindJSON(&updatedParcel); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Data tidak valid"})
 		return
 	}
 
-	err = models.UpdateParcel(id, parcel)
-	if err != nil {
+	if err := models.UpdateParcel(config.DB, uint(id), updatedParcel); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate data pengiriman"})
 		return
 	}
@@ -75,7 +74,7 @@ func UpdateParcel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Data pengiriman berhasil diupdate"})
 }
 
-// DeleteParcel - Menghapus data pengiriman
+// DeleteParcel - Menghapus data pengiriman dan tracking status terkait
 func DeleteParcel(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -83,17 +82,9 @@ func DeleteParcel(c *gin.Context) {
 		return
 	}
 
-	// Hapus data parcel
-	err = models.DeleteParcel(id)
-	if err != nil {
+	// Hapus parcel dan tracking status terkait
+	if err := models.DeleteParcel(config.DB, uint(id)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus data pengiriman"})
-		return
-	}
-
-	// Hapus tracking status yang terkait
-	err = models.DeleteTrackingStatusByParcelID(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus tracking status yang terkait"})
 		return
 	}
 
@@ -108,16 +99,15 @@ func AddTrackingStatus(c *gin.Context) {
 		return
 	}
 
-	var request struct {
-		Status string `json:"status"`
+	var input struct {
+		Status string `json:"status" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Data tidak valid"})
 		return
 	}
 
-	err = models.AddTrackingStatus(id, request.Status)
-	if err != nil {
+	if err := models.AddTrackingStatus(config.DB, uint(id), input.Status); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan tracking status"})
 		return
 	}
@@ -133,7 +123,7 @@ func GetTrackingStatus(c *gin.Context) {
 		return
 	}
 
-	statuses, err := models.GetTrackingStatus(id)
+	statuses, err := models.GetTrackingStatus(config.DB, uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil tracking status"})
 		return
